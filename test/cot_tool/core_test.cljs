@@ -4,14 +4,27 @@
             [cot-tool.core :as core]
             [reagent.core  :as r]))
 
+(defcard-rg Name
+  [core/name-class])
+
 (defcard-rg race-select
   [core/race-select])
 
-(defcard-rg attribute-values
+(defcard-rg attributes-values
   [core/attribute-values])
 
 (defcard-rg life
   [core/life])
+
+(defcard-rg skill-values
+  [core/skill-values])
+
+(defcard-rg state
+  [core/current-state])
+
+(defcard-rg used-skill-points ;wo kommt die 1 her?? und wie bekommm ich
+  ;hier die rechnung der skillpunkte hin?
+  [core/show-used-points])
 
 (deftest calc-skill-point
   (is (= 0 (core/calc-skill-points 0)))
@@ -33,8 +46,13 @@
                                      :b 4
                                      :c 5}))))
 
-(defcard-rg state
-  [core/current-state])
+(deftest attribute-modification
+  (is (= 0 (core/attribute-modification 10 )))
+  (is (= 1 (core/attribute-modification 12 )))
+  (is (= 1 (core/attribute-modification 13 )))
+  (is (= -1 (core/attribute-modification 9 )))
+  (is (= -2 (core/attribute-modification 7 )))
+  (is (= -2 (core/attribute-modification 6 ))))
 
 (defcard-rg sample-component
   [core/app])

@@ -1,18 +1,7 @@
 (ns cot-tool.core
-  (:require [cljs.pprint :refer [pprint]]
+  (:require [cot-tool.model :as model]
+            [cljs.pprint :refer [pprint]]
             [reagent.core :as reagent]))
-
-(def race-names
-  {:human "Mensch"
-   :elf   "Elf"
-   :dwarf "Zwerg"})
-
-(def attributes [:strength :constitution :dexterty])
-
-(def attribute-names
-  {:strength "St"
-   :constitution "Ko"
-   :dexterty "Ge"})
 
 (defn calc-skill-points [points]
   (if (zero? points)
@@ -26,7 +15,9 @@
 (defonce state
   (reagent/atom
    {:race :human
-    :attr (zipmap attributes (repeat 8))
+    :attr (zipmap model/attributes (repeat 8))
+    :modi (zipmap model/attributes (repeat 0))
+    :skill (zipmap model/skills (repeat 0))
     :bought-life 0}))
 
 (defn race-select []
@@ -35,15 +26,23 @@
                                race (keyword race-string)]
                            (swap! state assoc :race race)))
             :value (:race @state)}
-   (for [[race race-name] race-names]
+   (for [[race race-name] model/race-names]
      ^{:key race}
      [:option {:value race}
       race-name])])
 
+(defn name-class []
+  [:div
+  "Name "
+  [:input ]
+  " Klasse "
+  [:input ]])
+
 (defn attribute-value [att]
   [:tr
-   [:td (attribute-names att)]
+   [:td (model/attribute-names att)]
    [:td (get-in @state [:attr att])]
+   [:td (get-in @state [:modi att])]
    [:td [:button {:on-click (fn []
                               (swap! state update-in [:attr att] inc) )}
          "+"]]
@@ -54,9 +53,19 @@
 (defn attribute-values []
   [:table
    [:tbody
-    (for [att attributes]
+    (for [att model/attributes]
       ^{:key att}
       [attribute-value att])]])
+
+(defn attribute-modification [point]
+  (let [x (quot point 2)]
+    (- x 5)))
+
+(defn add-attribute-modification [point]
+  (+ point (attribute-modification point)))
+
+(defn attribute-modifications [att]
+  (swap! state update-in [:modi att] add-attribute-modification))
 
 (defn life []
   (let [constitution (:constitution (:attr @state))
@@ -74,8 +83,29 @@
                            (swap! state update :bought-life dec))}
             "-"]]))
 
+(defn skill-value [sk]
+  [:tr
+   [:td (model/skill-names sk)]
+   [:td (get-in @state [:skill sk])]
+   [:td [:button {:on-click (fn []
+                              (swap! state update-in [:skill sk] inc) )}
+         "+"]]
+   [:td [:button {:on-click (fn []
+                              (swap! state update-in [:skill sk] dec) )}
+         "-"]]])
+
+(defn skill-values []
+  [:table
+   [:tbody
+    (for [sk model/skills]
+      ^{:key sk}
+      [skill-value sk])]])
+
 (defn current-state []
   [:pre (with-out-str (pprint @state))])
+
+(defn show-used-points []
+  [:pre (used-skill-points [])])
 
 (defn app []
   [:h1 "Charakter erstellen"])
